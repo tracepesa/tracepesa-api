@@ -1,0 +1,1166 @@
+!! IOS XR Configuration 6.5.3
+!! Last configuration change at Fri Aug 23 15:50:16 2019 by chaulal
+!
+hostname KWL-ASR9K-P-02
+usergroup priv8
+ taskgroup root-system
+!
+clock timezone GMT 3
+banner login ^CC
+!
+UNAUTHORISED ACCESS TO THIS NETWORK DEVICE IS PROHIBITED.
+You must have explicit permission to access or configure this device.
+All activities performed on this device may be logged,
+and violations of this policy may result in disciplinary action,
+and may be reported to law enforcement agencies.
+There is no right to privacy on this device.
+!
+!
+^C
+logging trap warning
+logging console disable
+logging monitor notifications
+logging buffered 2097152
+logging facility local7
+logging 192.168.104.40 vrf default severity info
+logging 192.168.105.26 vrf default
+logging 192.168.105.27 vrf default
+logging 192.168.105.135 vrf default
+logging 172.19.0.5 vrf CARRIER_cdn_oam port 1514
+logging source-interface Loopback450
+logging hostnameprefix KWL-ASR9K-P-02
+service timestamps log datetime localtime msec show-timezone
+service timestamps debug datetime localtime msec show-timezone
+tftp vrf default ipv4 server homedir disk0:
+telnet vrf default ipv4 server max-servers 10
+telnet vrf Mgmt-intf ipv4 server max-servers 10
+telnet vrf CARRIER_cdn_oam ipv4 server max-servers 80
+tacacs source-interface Loopback450 vrf CARRIER_cdn_oam
+tacacs-server host 192.168.104.88 port 49
+ key 7 13064601085C
+!
+tacacs-server host 172.19.0.154 port 49
+ key 7 13064601085C
+!
+username dvas
+ group root-system
+ secret 5 $1$/.CO$sxcpEvsOgKtAZbdxokES50
+!
+aaa group server tacacs+ cdn_tacacs
+ server 192.168.104.88
+ server 172.19.0.154
+ vrf CARRIER_cdn_oam
+!
+aaa authorization exec cdn_tacacs group cdn_tacacs local
+aaa authorization commands cdn_tacacs group cdn_tacacs none
+aaa authentication login console local line
+aaa authentication login cdn_tacacs group cdn_tacacs local
+configuration commit auto-save filename ftp://cdn-backup:cdn_2018@192.168.104.43;CARRIER_cdn_oam/KWL-DC/KWL-ASR9K-P-02
+vrf Mgmt-intf
+!
+vrf CARRIER_cdn_oam
+ address-family ipv4 unicast
+  import route-target
+   36908:123
+   36908:362
+   36908:450
+   36908:451
+   36908:452
+   36908:453
+   36908:501
+   36908:800
+  !
+  export route-target
+   36908:450
+  !
+ !
+!
+tcp selective-ack
+tcp path-mtu-discovery
+line template vty
+ secret 5 $1$Rl7Z$Pd1E5/88UC0H9z.XTh58L.
+ password 7 15584108122B386E62
+ login authentication cdn_tacacs
+ exec-timeout 30 0
+ access-class ingress management
+ session-timeout 5
+ transport input ssh
+ transport output telnet ssh
+!
+line console
+ secret 5 $1$dow2$NppFYWu91G67asYnuP2nP1
+ login authentication console
+ exec-timeout 30 0
+ length 0
+ session-timeout 5
+!
+line default
+ transport input all
+!
+line template for-aaa-test
+ secret 5 $1$Rl7Z$Pd1E5/88UC0H9z.XTh58L.
+ login authentication cdn_tacacs
+ exec-timeout 30 0
+ access-class ingress management
+ session-timeout 5
+ transport input telnet ssh
+ transport output telnet ssh
+!
+vty-pool 6-to-99 6 99 line-template vty
+vty-pool default 0 4 line-template vty
+vty-pool for-aaa-test 5 5 line-template for-aaa-test
+snmp-server ifindex persist
+snmp-server trap link ietf
+snmp-server host 10.8.13.117 traps version 2c ciscoro
+snmp-server host 192.168.104.35 traps version 2c un1quepswd
+snmp-server host 192.168.104.36 traps version 2c un1quepswd
+snmp-server host 192.168.104.37 traps version 2c un1quepswd
+snmp-server host 192.168.105.28 traps version 2c un1quepswd
+snmp-server host 192.168.106.100 traps version 2c un1quepswd
+snmp-server user cdn-usr vtl-grp v3 auth sha encrypted 05180903205E6E1F0D09 priv aes 256 encrypted 02030A58191F1F356C4D0D17
+snmp-server community un1quepswd RO
+snmp-server group vtl-grp v3 priv
+snmp-server traps copy-complete
+snmp-server traps config
+snmp-server traps entity
+snmp-server traps syslog
+snmp-server trap-source Loopback450
+redundancy
+!
+ntp
+ server vrf CARRIER_cdn_oam 192.168.105.17
+ update-calendar
+!
+key chain ISIS
+ key 1
+  accept-lifetime 00:00:00 january 01 1993 infinite
+  key-string password 0032272A
+  send-lifetime 00:00:00 january 01 1993 infinite
+  cryptographic-algorithm HMAC-MD5
+ !
+!
+ipv4 virtual address vrf Mgmt-intf 192.168.112.38/27
+domain name vodacom.tz
+domain lookup disable
+cdp
+explicit-path name PATH-KWL2-ARU2
+ index 1 next-address strict ipv4 unicast 192.168.110.233
+!
+explicit-path name PATH-KWL2-ARU2-DOD2
+ index 1 next-address strict ipv4 unicast 192.168.110.233
+ index 2 next-address strict ipv4 unicast 192.168.110.86
+!
+explicit-path name PATH-KWL2-KWL1-DOD2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.103.214
+!
+explicit-path name PATH-KWL2-KWL1-MBY2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.110.30
+!
+explicit-path name PATH-KWL2-MBZ2-DOD2
+ index 1 next-address strict ipv4 unicast 192.168.110.182
+ index 2 next-address strict ipv4 unicast 192.168.110.190
+!
+explicit-path name PATH-KWL2-ARU2-DOD2-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.110.233
+ index 2 next-address strict ipv4 unicast 192.168.110.86
+ index 3 next-address strict ipv4 unicast 192.168.103.157
+!
+explicit-path name PATH-KWL2-KWL1-ARU1-ARU2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.103.162
+ index 3 next-address strict ipv4 unicast 192.168.109.146
+!
+explicit-path name PATH-KWL2-KWL1-DOD2-ARU2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.103.214
+ index 3 next-address strict ipv4 unicast 192.168.110.85
+!
+explicit-path name PATH-KWL2-KWL1-DOD2-MBY2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.103.214
+ index 3 next-address strict ipv4 unicast 192.168.110.126
+!
+explicit-path name PATH-KWL2-KWL1-DOD2-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.103.214
+ index 3 next-address strict ipv4 unicast 192.168.103.157
+!
+explicit-path name PATH-KWL2-KWL1-MBY2-DOD2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.110.30
+ index 3 next-address strict ipv4 unicast 192.168.110.125
+!
+explicit-path name PATH-KWL2-MBZ2-ARU1-ARU2
+ index 1 next-address strict ipv4 unicast 192.168.110.182
+ index 2 next-address strict ipv4 unicast 192.168.110.253
+ index 3 next-address strict ipv4 unicast 192.168.109.146
+!
+explicit-path name PATH-KWL2-MBZ2-DOD2-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.110.182
+ index 2 next-address strict ipv4 unicast 192.168.110.190
+ index 3 next-address strict ipv4 unicast 192.168.103.158
+!
+explicit-path name PATH-KWL2-KWL1-MBY2-DOD2-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.110.30
+ index 3 next-address strict ipv4 unicast 192.168.110.125
+ index 4 next-address strict ipv4 unicast 192.168.103.158
+!
+explicit-path name PATH-KWL2-KWL1-MBY2-MBY1-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.110.30
+ index 3 next-address strict ipv4 unicast 192.168.109.218
+ index 4 next-address strict ipv4 unicast 192.168.103.246
+!
+explicit-path name PATH-KWL2-MBZ2-MBZ1-MBY1-MBY2
+ index 1 next-address strict ipv4 unicast 192.168.110.182
+ index 2 next-address strict ipv4 unicast 192.168.109.73
+ index 3 next-address strict ipv4 unicast 192.168.110.78
+ index 4 next-address strict ipv4 unicast 192.168.109.217
+!
+explicit-path name PATH-KWL2-ARU2-DOD2-DOD1-MWZ1-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.110.233
+ index 2 next-address strict ipv4 unicast 192.168.110.86
+ index 3 next-address strict ipv4 unicast 192.168.110.33
+ index 4 next-address strict ipv4 unicast 192.168.110.222
+ index 5 next-address strict ipv4 unicast 192.168.110.106
+!
+explicit-path name PATH-KWL2-KWL1-DOD2-DOD1-MWZ1-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.103.214
+ index 3 next-address strict ipv4 unicast 192.168.110.33
+ index 4 next-address strict ipv4 unicast 192.168.110.222
+ index 5 next-address strict ipv4 unicast 192.168.110.106
+!
+explicit-path name PATH-KWL2-KWL1-MBZ1-DOD1-MWZ1-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.109.1
+ index 2 next-address strict ipv4 unicast 192.168.110.178
+ index 3 next-address strict ipv4 unicast 192.168.109.78
+ index 4 next-address strict ipv4 unicast 192.168.110.222
+ index 5 next-address strict ipv4 unicast 192.168.110.106
+!
+explicit-path name PATH-KWL2-MBZ2-DOD2-DOD1-MWZ1-MWZ2
+ index 1 next-address strict ipv4 unicast 192.168.110.182
+ index 2 next-address strict ipv4 unicast 192.168.110.190
+ index 3 next-address strict ipv4 unicast 192.168.110.33
+ index 4 next-address strict ipv4 unicast 192.168.110.222
+ index 5 next-address strict ipv4 unicast 192.168.110.106
+!
+ftp client password encrypted 025756085F53592006
+ftp client username dvas
+ftp client source-interface Loopback450
+ftp client vrf Mgmt-intf password encrypted 1446405858517C
+ftp client vrf Mgmt-intf username licesne
+ftp client vrf Mgmt-intf source-interface MgmtEth0/RSP0/CPU0/0
+! <<<<<<<<<  ACCESS LIST FOR SNMP  >>>>>>>>>>
+ipv4 access-list 1
+ 5 permit ipv4 host 10.10.98.30 any
+ 10 permit ipv4 192.168.101.0 0.0.0.255 any
+ 11 permit ipv4 host 10.8.13.117 any
+ 20 permit ipv4 192.168.102.0 0.0.0.255 any
+ 30 permit ipv4 192.168.103.0 0.0.0.255 any
+ 40 permit ipv4 192.168.104.0 0.0.0.255 any
+ 50 permit ipv4 192.168.105.0 0.0.0.255 any
+ 60 permit ipv4 192.168.106.0 0.0.0.255 any
+ 70 permit ipv4 192.168.140.0 0.0.0.255 any
+ 80 deny ipv4 any any log
+!
+ipv4 access-list management
+ 10 permit tcp 172.19.0.0 0.0.0.255 any eq ssh
+ 20 permit tcp 192.168.100.0 0.0.3.255 any eq ssh
+ 30 permit tcp 192.168.104.0 0.0.7.255 any eq ssh
+ 40 permit tcp 192.168.112.0 0.0.15.255 any eq ssh
+ 50 permit tcp 192.168.101.0 0.0.0.255 any
+ 60 deny ipv4 192.168.133.0 0.0.0.255 any
+ 70 deny ipv4 192.168.139.0 0.0.0.255 any
+ 80 deny ipv4 192.168.140.0 0.0.3.255 any
+ 90 deny ipv4 192.168.147.0 0.0.0.255 any
+ 100 deny ipv4 192.168.148.0 0.0.3.255 any
+ 110 deny ipv4 192.168.153.0 0.0.0.255 any
+ 120 deny ipv4 192.168.159.0 0.0.0.255 any
+ 130 deny ipv4 192.168.160.0 0.0.3.255 any
+ 140 deny ipv4 192.168.167.0 0.0.0.255 any
+ 150 deny ipv4 192.168.168.0 0.0.3.255 any
+ 160 permit tcp 192.168.128.0 0.0.224.255 any eq ssh
+ 170 permit tcp 192.168.160.0 0.0.15.255 any eq ssh
+!
+class-map match-any MPLS_Sync
+ match precedence 7 
+ match dscp cs7 
+ match mpls experimental topmost 7 
+ end-class-map
+! 
+class-map match-any MPLS_Premium
+ match precedence 5 
+ match dscp cs5 ef 
+ match mpls experimental topmost 5 
+ end-class-map
+! 
+class-map match-any MPLS_NetControl
+ match precedence 6 
+ match dscp cs6 
+ match mpls experimental topmost 6 
+ end-class-map
+! 
+class-map match-any MPLS_Enhanced_and_Plus
+ match precedence 2 4 
+ match mpls experimental topmost 2 4 
+ match dscp cs2 af21 af22 af23 cs4 af41 af42 af43 
+ end-class-map
+! 
+class-map match-any MPLS_Standard_and_Plus
+ match precedence 1 3 
+ match mpls experimental topmost 1 3 
+ match dscp cs1 af11 af12 af13 cs3 af31 af32 af33 
+ end-class-map
+! 
+policy-map MPLS_TO_CORE
+ class MPLS_Sync
+  priority level 1 
+  police rate percent 2 
+   conform-action transmit
+   exceed-action drop
+  ! 
+ ! 
+ class MPLS_NetControl
+  priority level 1 
+  police rate percent 2 
+   conform-action transmit
+   exceed-action drop
+  ! 
+ ! 
+ class MPLS_Premium
+  priority level 2 
+  police rate percent 60 
+   conform-action transmit
+   exceed-action drop
+  ! 
+ ! 
+ class MPLS_Enhanced_and_Plus
+  random-detect dscp cs4,af41,af42,af43 20 ms 25 ms 
+  random-detect dscp cs2,af21,af22,af23 25 ms 30 ms 
+  bandwidth percent 22 
+ ! 
+ class MPLS_Standard_and_Plus
+  random-detect dscp cs3,af32,af31,af33 20 ms 25 ms 
+  random-detect dscp cs1,af11,af12,af13 25 ms 30 ms 
+  bandwidth percent 12 
+ ! 
+ class class-default
+ ! 
+ end-policy-map
+! 
+policy-map QOS_POLICY_LINK_TO_MBEZI_METRO_BB
+ class class-default
+  service-policy MPLS_TO_CORE
+  shape average percent 98 
+ ! 
+ end-policy-map
+! 
+policy-map QOS_POLICY_LINK_TO_ARUSHA_CONSORT_BB
+ class class-default
+  service-policy MPLS_TO_CORE
+  shape average percent 98 
+ ! 
+ end-policy-map
+! 
+flow exporter-map NetQOS-e
+ version v9
+  options interface-table timeout 60
+  options sampler-table timeout 60
+  template timeout 5
+  template data timeout 5
+  template options timeout 5
+ !
+ transport udp 9995
+ source GigabitEthernet0/0/0/14
+ destination 192.168.106.100
+!
+interface Bundle-Ether2
+ description LINK TO MBZ-P-ASR9K-02 BE2 40G VIA KIBO
+ bfd address-family ipv4 multiplier 3
+ bfd address-family ipv4 destination 192.168.110.182
+ bfd address-family ipv4 fast-detect
+ bfd address-family ipv4 minimum-interval 100
+ mtu 9216
+ service-policy output QOS_POLICY_LINK_TO_MBEZI_METRO_BB
+ ipv4 address 192.168.110.181 255.255.255.252
+ load-interval 30
+!
+interface Bundle-Ether30
+ description LINK TO KWL-ASR9K-P-01 INT Bundle-Ether30
+ bfd address-family ipv4 multiplier 3
+ bfd address-family ipv4 destination 192.168.109.1
+ bfd address-family ipv4 fast-detect
+ bfd address-family ipv4 minimum-interval 100
+ mtu 9216
+ ipv4 address 192.168.109.2 255.255.255.252
+ load-interval 30
+!
+interface Bundle-Ether40
+ description << Link to KWL-CAR-PE-ASR9006-02 INT Bundle-Ether40
+ bfd address-family ipv4 multiplier 3
+ bfd address-family ipv4 destination 192.168.109.141
+ bfd address-family ipv4 fast-detect
+ bfd address-family ipv4 minimum-interval 100
+ mtu 9216
+ ipv4 address 192.168.109.142 255.255.255.252
+ load-interval 30
+!
+interface Loopback0
+ ipv4 address 192.168.101.211 255.255.255.255
+!
+interface Loopback450
+ vrf CARRIER_cdn_oam
+ ipv4 address 192.168.105.12 255.255.255.255
+!
+interface tunnel-te1
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 10
+ destination 192.168.101.195
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-MBZ2-DOD2-DOD1-MWZ1-MWZ2 protected-by 3
+ path-option 3 explicit name PATH-KWL2-KWL1-DOD2-DOD1-MWZ1-MWZ2 protected-by 4
+ path-option 4 explicit name PATH-KWL2-KWL1-MBZ1-DOD1-MWZ1-MWZ2
+!
+interface tunnel-te2
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 5
+ destination 192.168.101.195
+ forwarding-adjacency
+ !
+ path-option 3 explicit name PATH-KWL2-ARU2-DOD2-MWZ2 protected-by 4
+ path-option 4 explicit name PATH-KWL2-KWL1-MBY2-DOD2-MWZ2
+!
+interface tunnel-te3
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 5
+ destination 192.168.101.195
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-KWL1-MBY2-MBY1-MWZ2
+!
+interface tunnel-te21
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 10
+ destination 192.168.101.207
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-KWL1-DOD2 protected-by 3
+ path-option 3 explicit name PATH-KWL2-MBZ2-DOD2 protected-by 4
+ path-option 4 explicit name PATH-KWL2-ARU2-DOD2 protected-by 5
+ path-option 5 explicit name PATH-KWL2-KWL1-MBY2-DOD2
+!
+interface tunnel-te41
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 3
+ destination 192.168.101.204
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-KWL1-MBY2 protected-by 3
+ path-option 3 explicit name PATH-KWL2-KWL1-DOD2-MBY2
+!
+interface tunnel-te42
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 7
+ destination 192.168.101.204
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-MBZ2-MBZ1-MBY1-MBY2
+!
+interface tunnel-te61
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 10
+ destination 192.168.101.215
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-ARU2 protected-by 3
+ path-option 3 explicit name PATH-KWL2-MBZ2-ARU1-ARU2
+!
+interface tunnel-te62
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 7
+ destination 192.168.101.215
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-KWL1-ARU1-ARU2
+!
+interface tunnel-te63
+ ipv4 unnumbered Loopback0
+ signalled-bandwidth 3
+ destination 192.168.101.215
+ forwarding-adjacency
+ !
+ path-option 2 explicit name PATH-KWL2-KWL1-DOD2-ARU2
+!
+interface MgmtEth0/RSP0/CPU0/0
+ cdp
+ vrf Mgmt-intf
+ ipv4 address 192.168.112.36 255.255.255.224
+ shutdown
+!
+interface MgmtEth0/RSP0/CPU0/1
+ shutdown
+!
+interface MgmtEth0/RSP1/CPU0/0
+ cdp
+ vrf Mgmt-intf
+ ipv4 address 192.168.112.37 255.255.255.224
+ shutdown
+!
+interface MgmtEth0/RSP1/CPU0/1
+ shutdown
+!
+interface TenGigE0/0/0/0
+ description LINK TO KWL-ASR9K-C-PE-02 INT Te0/2/1/3
+ bundle id 40 mode on
+!
+interface TenGigE0/0/0/1
+ description LINK TO KWL-ASR9K-P-01 INT Te0/0/0/2
+ bundle id 30 mode active
+!
+interface TenGigE0/0/0/2
+ shutdown
+!
+interface TenGigE0/0/0/3
+ description Link to MBZ-P-ASR9K-02 INT Te0/0/0/3
+ bundle id 2 mode active
+!
+interface TenGigE0/0/1/0
+ description LINK TO MBZ-P-ASR9K-02 INT Te0/0/1/1 VIA KIBO
+!
+interface TenGigE0/0/1/1
+ description Link To ARU-ASR9K-02 INT Te0/1/1/2 VIA CONSORTIUM DWDM CLOUD 10G
+ cdp
+ mtu 9216
+ service-policy output QOS_POLICY_LINK_TO_ARUSHA_CONSORT_BB
+ ipv4 address 192.168.110.234 255.255.255.252
+ load-interval 30
+!
+interface TenGigE0/0/1/2
+ description LINK TO KWL-ASR9K-C-PE-02 INT TenGigE0/2/1/1
+ bundle id 40 mode on
+!
+interface TenGigE0/0/1/3
+ description << Link To KWL-ASR9K-01 Te0/0/1/3 >>
+ bundle id 30 mode active
+!
+interface TenGigE0/1/0/0
+ description LINK TO KWL-ASR9K-C-PE-02 INT Te0/3/1/3
+ bundle id 40 mode on
+!
+interface TenGigE0/1/0/1
+ description LINK TO KWL-ASR9K-P-01 INT Te0/0/0/3
+ bundle id 30 mode active
+!
+interface TenGigE0/1/0/2
+ shutdown
+!
+interface TenGigE0/1/0/3
+ description Link to MBZ-P-ASR9K-02 INT Te0/1/1/3
+ bundle id 2 mode active
+!
+interface TenGigE0/1/1/0
+ description LINK TO MBZ-P-ASR9K-02 INT Te0/1/0/2 VIA DWDM SLOT 4 PORT 5
+ bundle id 2 mode active
+!
+interface TenGigE0/1/1/1
+ description << Link to KWL-BUS-PE-ASR9001-02 INT Te0/0/1/1 >>
+ mtu 9216
+ ipv4 address 192.168.109.214 255.255.255.252
+!
+interface TenGigE0/1/1/2
+ description LINK TO KWL-ASR9K-C-PE-02 INT TenGigE0/0/1/1
+ bundle id 40 mode on
+!
+interface TenGigE0/1/1/3
+ description << Link to KWL-RAN-PE-ASR9006-02 INT Te0/0/1/1 >>
+ mtu 9216
+ ipv4 address 192.168.110.102 255.255.255.252
+!
+interface TenGigE0/1/1/3.1007 l2transport
+ description Link to KWL2-MBZ2-OSPF-AREA7
+ encapsulation dot1q 1007
+ rewrite ingress tag pop 1 symmetric
+!
+interface TenGigE0/1/1/3.1013 l2transport
+ description LINK FOR KWL2-MBZ1-OSPF-AREA3
+ encapsulation dot1q 1013
+ rewrite ingress tag pop 1 symmetric
+!
+interface PTP0/RSP0/CPU0/0
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/0
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/1
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/2
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/3
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/4
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/5
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/6
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/7
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/8
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/9
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/10
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/11
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/12
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/13
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/14
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/15
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/16
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/17
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/18
+ shutdown
+!
+interface preconfigure GigabitEthernet0/0/0/19
+ description **** SHUTDOWN PORT ****
+ cdp
+ mtu 9216
+ service-policy output qos-out
+ negotiation auto
+ shutdown
+!
+interface preconfigure PTP0/RSP1/CPU0/0
+ shutdown
+!
+route-policy ADD-PATH
+  set path-selection backup 1 advertise install
+end-policy
+!
+route-policy CHANGE-AD
+  set administrative-distance 120
+  done
+end-policy
+!
+route-policy VTL-INTRA-AS-POLICY
+  pass
+end-policy
+!
+router static
+ address-family ipv4 unicast
+  192.168.0.0/16 Null0
+ !
+ vrf Mgmt-intf
+  address-family ipv4 unicast
+   0.0.0.0/0 192.168.112.62
+  !
+ !
+!
+router isis CORE
+ set-overload-bit on-startup wait-for-bgp
+ is-type level-2-only
+ net 49.1921.6810.1211.00
+ nsf ietf
+ log adjacency changes
+ lsp-gen-interval maximum-wait 15 initial-wait 5 secondary-wait 10 level 2
+ lsp-refresh-interval 65435
+ max-lsp-lifetime 65535
+ address-family ipv4 unicast
+  metric-style wide level 2
+  ispf level 2
+  mpls traffic-eng level-2-only
+  mpls traffic-eng router-id Loopback0
+  spf-interval maximum-wait 400 initial-wait 4 secondary-wait 100 level 2
+  distance 105
+ !
+ interface Bundle-Ether2
+  circuit-type level-2-only
+  bfd minimum-interval 100
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-padding disable
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix remote-lfa tunnel mpls-ldp level 2
+   metric 20 level 2
+   mpls ldp sync level 2
+  !
+ !
+ interface Bundle-Ether30
+  circuit-type level-2-only
+  bfd minimum-interval 100
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-padding disable
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix remote-lfa tunnel mpls-ldp level 2
+   metric 10 level 2
+   mpls ldp sync level 2
+  !
+ !
+ interface Bundle-Ether40
+  circuit-type level-2-only
+  bfd minimum-interval 100
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-padding disable
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix remote-lfa tunnel mpls-ldp level 2
+   metric 10 level 2
+   mpls ldp sync level 2
+  !
+ !
+ interface Loopback0
+  passive
+  address-family ipv4 unicast
+  !
+ !
+ interface tunnel-te1
+  address-family ipv4 unicast
+   metric 125 level 2
+  !
+ !
+ interface tunnel-te2
+  address-family ipv4 unicast
+   metric 120 level 2
+  !
+ !
+ interface tunnel-te3
+  address-family ipv4 unicast
+   metric 120 level 2
+  !
+ !
+ interface tunnel-te21
+  address-family ipv4 unicast
+   metric 150 level 2
+  !
+ !
+ interface tunnel-te41
+  address-family ipv4 unicast
+   metric 150 level 2
+  !
+ !
+ interface tunnel-te42
+  address-family ipv4 unicast
+   metric 150 level 2
+  !
+ !
+ interface tunnel-te61
+  address-family ipv4 unicast
+   metric 150 level 2
+  !
+ !
+ interface tunnel-te62
+  address-family ipv4 unicast
+   metric 155 level 2
+  !
+ !
+ interface tunnel-te63
+  address-family ipv4 unicast
+   metric 155 level 2
+  !
+ !
+ interface TenGigE0/0/1/1
+  circuit-type level-2-only
+  bfd minimum-interval 100
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-padding disable
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix remote-lfa tunnel mpls-ldp level 2
+   metric 200 level 2
+   mpls ldp sync level 2
+  !
+ !
+ interface TenGigE0/1/1/1
+  circuit-type level-2-only
+  bfd minimum-interval 100
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-padding disable
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix remote-lfa tunnel mpls-ldp level 2
+   metric 10 level 2
+   mpls ldp sync level 2
+  !
+ !
+ interface TenGigE0/1/1/3
+  circuit-type level-2-only
+  bfd minimum-interval 100
+  bfd multiplier 3
+  bfd fast-detect ipv4
+  point-to-point
+  hello-padding disable
+  hello-password keychain ISIS
+  address-family ipv4 unicast
+   fast-reroute per-prefix level 2
+   fast-reroute per-prefix remote-lfa tunnel mpls-ldp level 2
+   metric 10 level 2
+   mpls ldp sync level 2
+  !
+ !
+!
+router bgp 64908
+ bgp router-id 192.168.101.211
+ bgp cluster-id 64908
+ ibgp policy out enforce-modifications
+ address-family ipv4 unicast
+  table-policy CHANGE-AD
+  additional-paths receive
+  additional-paths send
+  additional-paths selection route-policy ADD-PATH
+  nexthop trigger-delay critical 0
+  network 192.168.101.211/32
+  allocate-label all
+ !
+ address-family vpnv4 unicast
+ !
+ session-group VTL-CESR
+  remote-as 64908
+  password encrypted 14212627
+  update-source Loopback0
+ !
+ session-group VTL-CARRIER
+  remote-as 64908
+  password encrypted 14212627
+  update-source Loopback0
+ !
+ session-group VTL-INTER-AS
+  remote-as 36908
+  ebgp-multihop 255
+  password encrypted 03326F27
+  update-source Loopback0
+ !
+ neighbor-group VTL-CESR
+  use session-group VTL-CESR
+  address-family ipv4 unicast
+   route-reflector-client
+  !
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+ !
+ neighbor-group VTL-CARRIER
+  use session-group VTL-CARRIER
+  address-family ipv4 unicast
+   route-reflector-client
+  !
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+ !
+ neighbor-group VTL-INTER-AS
+  use session-group VTL-INTER-AS
+  address-family ipv4 labeled-unicast
+   route-policy VTL-INTRA-AS-POLICY in
+   route-policy VTL-INTRA-AS-POLICY out
+   next-hop-unchanged
+  !
+  address-family vpnv4 unicast
+   route-policy VTL-INTRA-AS-POLICY in
+   route-policy VTL-INTRA-AS-POLICY out
+   next-hop-unchanged
+  !
+ !
+ neighbor-group VTL-CARRIER-BGP-LU
+  use session-group VTL-CARRIER
+  address-family ipv4 labeled-unicast
+   route-reflector-client
+  !
+  address-family vpnv4 unicast
+   route-reflector-client
+  !
+ !
+ neighbor-group VTL-CARRIER-btw-RR
+  use session-group VTL-CARRIER
+  address-family ipv4 labeled-unicast
+  !
+  address-family vpnv4 unicast
+  !
+ !
+ neighbor 192.168.101.1
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBY-C-PE01
+ !
+ neighbor 192.168.101.2
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBY-C-PE02
+ !
+ neighbor 192.168.101.3
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBEYA-RAN-PE-01
+ !
+ neighbor 192.168.101.4
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBEYA-RAN-PE-02
+ !
+ neighbor 192.168.101.5
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.6
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.7
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MWZ-C-PE-01
+ !
+ neighbor 192.168.101.8
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MWZ-C-PE-02
+ !
+ neighbor 192.168.101.9
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description DOD-CARR-PE01
+ !
+ neighbor 192.168.144.1
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description DOD-HUAWEI-NE40-X8A-RSG-1
+ !
+ neighbor 192.168.144.2
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description DOD-HUAWEI-NE40-X8A-RSG-2
+ !
+ neighbor 192.168.174.1
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description ARU-HUAWEI-NE40-X8A-RSG-1
+ !
+ neighbor 192.168.174.3
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description ARU-HUAWEI-NE40-X8A-RSG-2
+ !
+ neighbor 192.168.101.10
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description DOD-CARR-PE02
+ !
+ neighbor 192.168.101.11
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description KWALE-MSC5-ASR9K
+ !
+ neighbor 192.168.101.12
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description KWALE-MSC6-ASR9K
+ !
+ neighbor 192.168.101.187
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBZ-ASR9K-C-PE-01
+ !
+ neighbor 192.168.101.188
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBZ-ASR9K-C-PE-02
+ !
+ neighbor 192.168.101.191
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description KWL-ASR9K-C-PE-01
+ !
+ neighbor 192.168.101.192
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description KWL-ASR9K-C-PE-02
+ !
+ neighbor 192.168.101.193
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBZ-ASR9K-R-PE-01
+ !
+ neighbor 192.168.101.194
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description MBZ-ASR9K-R-PE-02
+ !
+ neighbor 192.168.101.199
+  use neighbor-group VTL-INTER-AS
+  description to MBZ-ASR9K-02
+ !
+ neighbor 192.168.101.200
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.203
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.204
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.207
+  use neighbor-group VTL-CARRIER-btw-RR
+  description to DOD-9K-02
+ !
+ neighbor 192.168.101.214
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.216
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description DAR-ASR-9K-01
+ !
+ neighbor 192.168.101.220
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.233
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description DOD-GSR-01
+ !
+ neighbor 192.168.101.234
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description KWL-ASR9K-R-PE-01
+ !
+ neighbor 192.168.101.235
+  use neighbor-group VTL-CARRIER-BGP-LU
+  description KWL-ASR9K-R-PE-02
+ !
+ neighbor 192.168.101.251
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.252
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.253
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.101.254
+  use neighbor-group VTL-CARRIER-BGP-LU
+ !
+ neighbor 192.168.114.200
+  use neighbor-group VTL-CARRIER
+  description MTWARA-TTCL-ASR9001-01
+ !
+ neighbor 192.168.114.201
+  use neighbor-group VTL-CARRIER
+  description MTWARA-TTCL-ASR9001-02
+ !
+ vrf CARRIER_cdn_oam
+  rd 192.168.101.211:450
+  address-family ipv4 unicast
+   redistribute connected
+  !
+ !
+!
+l2vpn
+ xconnect group KWL2-MBZ1-OSPF-AREA3
+  p2p KWL2-MBZ1-OSPF-AREA3
+   interface TenGigE0/1/1/3.1013
+   neighbor ipv4 192.168.101.200 pw-id 901013
+   !
+  !
+ !
+ xconnect group KWL2-MBZ2-OSPF-AREA7
+  p2p KWL2-MBZ2-OSPF-AREA7
+   interface TenGigE0/1/1/3.1007
+   neighbor ipv4 192.168.101.199 pw-id 901007
+   !
+  !
+ !
+!
+mpls traffic-eng
+ interface Bundle-Ether2
+ !
+ interface Bundle-Ether30
+ !
+ interface TenGigE0/0/1/1
+ !
+!
+rsvp
+ interface Bundle-Ether2
+  bandwidth percentage 95
+ !
+ interface Bundle-Ether30
+  bandwidth percentage 95
+ !
+ interface TenGigE0/0/1/1
+  bandwidth percentage 95
+ !
+!
+mpls ldp
+ router-id 192.168.101.211
+ session protection
+ address-family ipv4
+  discovery targeted-hello accept
+ !
+ interface Bundle-Ether2
+ !
+ interface Bundle-Ether30
+ !
+ interface Bundle-Ether40
+ !
+ interface tunnel-te1
+ !
+ interface tunnel-te2
+ !
+ interface tunnel-te3
+ !
+ interface tunnel-te21
+ !
+ interface tunnel-te41
+ !
+ interface tunnel-te42
+ !
+ interface tunnel-te61
+ !
+ interface tunnel-te62
+ !
+ interface tunnel-te63
+ !
+ interface GigabitEthernet0/0/0/19
+ !
+ interface TenGigE0/0/1/1
+ !
+ interface TenGigE0/1/1/1
+ !
+ interface TenGigE0/1/1/3
+ !
+!
+router pim
+ address-family ipv4
+  interface Loopback0
+   enable
+  !
+  interface Bundle-Ether30
+   enable
+  !
+  interface TenGigE0/1/1/1
+   enable
+  !
+ !
+!
+mpls ip-ttl-propagate disable forwarded
+ssh server v2
+ssh server vrf CARRIER_cdn_oam
+end
